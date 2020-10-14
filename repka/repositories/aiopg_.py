@@ -42,9 +42,7 @@ class AiopgQueryExecutor(AsyncQueryExecutor):
         return row
 
     async def fetch_all(self, query: SqlAlchemyQuery, **sa_params: Any) -> AsyncIterator[Mapping]:
-        rp =  await self._connection.execute(query, **sa_params)
-        print(type(rp))
-        return rp
+        return await self._connection.execute(query, **sa_params)
 
     async def fetch_val(self, query: SqlAlchemyQuery, **sa_params: Any) -> Any:
         return await self._connection.scalar(query, **sa_params)
@@ -58,9 +56,7 @@ class AiopgQueryExecutor(AsyncQueryExecutor):
         return await self._connection.execute(query, **sa_params)
 
     async def update(self, query: SqlAlchemyQuery, **sa_params: Any) -> None:
-        rp =  await self._connection.execute(query, **sa_params)
-        print(type(rp))
-        return rp
+        return await self._connection.execute(query, **sa_params)
 
     async def delete(self, query: SqlAlchemyQuery, **sa_params: Any) -> None:
         await self._connection.execute(query, **sa_params)
