@@ -12,7 +12,7 @@ from typing import (
     cast,
     Generic,
     Mapping,
-    Set,
+    Set, AsyncIterator,
 )
 
 import sqlalchemy as sa
@@ -31,7 +31,7 @@ from repka.repositories.queries import (
     SqlAlchemyQuery,
     InsertManyQuery,
 )
-from repka.utils import model_to_primitive, is_field_equal_to_default
+from repka.utils import model_to_primitive, is_field_equal_to_default, mixed_zip
 
 Created = bool
 
@@ -51,7 +51,7 @@ class AsyncQueryExecutor:
         """Execute SELECT query and return first result row"""
 
     @abstractmethod
-    async def fetch_all(self, query: SqlAlchemyQuery, **sa_params: Any) -> Sequence[Mapping]:
+    async def fetch_all(self, query: SqlAlchemyQuery, **sa_params: Any) -> AsyncIterator[Mapping]:
         """Execute SELECT query and return all result rows"""
 
     @abstractmethod
@@ -63,7 +63,7 @@ class AsyncQueryExecutor:
         """Execute INSERT query and return returning columns"""
 
     @abstractmethod
-    async def insert_many(self, query: SqlAlchemyQuery, **sa_params: Any) -> Sequence[Mapping]:
+    async def insert_many(self, query: SqlAlchemyQuery, **sa_params: Any) -> AsyncIterator[Mapping]:
         """Execute INSERT query and return list of returning columns"""
 
     @abstractmethod
@@ -150,7 +150,7 @@ class AsyncBaseRepo(Generic[GenericIdModel], ABC):
         """Get all entities from DB matching filters and orders"""
         query = SelectQuery(self.table, filters or [], orders or [])()
         rows = await self.query_executor.fetch_all(query)
-        return [cast(GenericIdModel, self.deserialize(**row)) for row in rows]
+        return [cast(GenericIdModel, self.deserialize(**row)) async for row in rows]
 
     async def get_by_ids(self, entity_ids: Sequence[int]) -> List[GenericIdModel]:
         """Get all entities from DB with id from {entity_ids}"""
@@ -164,7 +164,7 @@ class AsyncBaseRepo(Generic[GenericIdModel], ABC):
             self.table, filters or [], orders or [], select_columns=[self.table.c.id]
         )()
         rows = await self.query_executor.fetch_all(query)
-        return [row["id"] for row in rows]
+        return [row["id"] async for row in rows]
 
     async def exists(self, *filters: BinaryExpression) -> bool:
         """Check entity matching filters exists in DB"""
@@ -365,7 +365,7 @@ class InsertManyImpl(InsertImpl):
 
         rows = await self.repo.query_executor.insert_many(query)
 
-        for entity, row in zip(entities, rows):
+        async for entity, row in mixed_zip(entities, rows):
             self._set_ignored_fields(entity, row)
 
         return entities
