@@ -1,7 +1,6 @@
 import json
 from contextlib import asynccontextmanager
-from typing import Sequence, Dict, Set, Union, TypeVar,  Tuple, AsyncIterator, \
-    Iterator
+from typing import Sequence, Dict, Set, Union, TypeVar, Tuple, AsyncIterator, Iterator
 
 from aiopg.sa import SAConnection, create_engine
 from pydantic import BaseModel

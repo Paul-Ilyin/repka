@@ -1,6 +1,6 @@
 from abc import ABC
 from contextvars import ContextVar
-from typing import Union, Optional, Mapping, Sequence, Any, AsyncIterator
+from typing import Union, Optional, Mapping, Any, AsyncIterator
 
 from aiopg.sa import SAConnection
 from aiopg.sa.result import RowProxy, ResultProxy
@@ -52,7 +52,9 @@ class AiopgQueryExecutor(AsyncQueryExecutor):
         row = await rows.first()
         return row
 
-    async def insert_many(self, query: SqlAlchemyQuery, **sa_params: Any) -> AsyncIterator[Mapping]:
+    async def insert_many(
+        self, query: SqlAlchemyQuery, **sa_params: Any
+    ) -> AsyncIterator[Mapping]:
         return await self._connection.execute(query, **sa_params)
 
     async def update(self, query: SqlAlchemyQuery, **sa_params: Any) -> None:

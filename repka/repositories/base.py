@@ -12,7 +12,8 @@ from typing import (
     cast,
     Generic,
     Mapping,
-    Set, AsyncIterator,
+    Set,
+    AsyncIterator,
 )
 
 import sqlalchemy as sa
@@ -63,7 +64,9 @@ class AsyncQueryExecutor:
         """Execute INSERT query and return returning columns"""
 
     @abstractmethod
-    async def insert_many(self, query: SqlAlchemyQuery, **sa_params: Any) -> AsyncIterator[Mapping]:
+    async def insert_many(
+        self, query: SqlAlchemyQuery, **sa_params: Any
+    ) -> AsyncIterator[Mapping]:
         """Execute INSERT query and return list of returning columns"""
 
     @abstractmethod
@@ -365,7 +368,7 @@ class InsertManyImpl(InsertImpl):
 
         rows = await self.repo.query_executor.insert_many(query)
 
-        async for entity, row in mixed_zip(entities, rows):
+        async for entity, row in mixed_zip(entities, rows):  # type: ignore
             self._set_ignored_fields(entity, row)
 
         return entities
