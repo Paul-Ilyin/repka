@@ -1,16 +1,17 @@
 from abc import ABC
 from contextvars import ContextVar
-from typing import Union, Optional, Mapping, Any, AsyncIterator
+from typing import Union, Optional, Mapping, Any, AsyncIterator, cast
 
 from aiopg.sa import SAConnection
 from aiopg.sa.result import RowProxy, ResultProxy
 from aiopg.sa.transaction import Transaction as SATransaction
 
-from repka.repositories.base import GenericIdModel, AsyncBaseRepo, AsyncQueryExecutor
+from repka.repositories.base import GenericIdModel, AsyncQueryExecutor
 from repka.repositories.queries import SqlAlchemyQuery
+from repka.repositories.repository import Repository
 
 
-class AiopgRepository(AsyncBaseRepo[GenericIdModel], ABC):
+class AiopgRepository(Repository[GenericIdModel], ABC):
     """
     Execute sql-queries, convert sql-row-dicts to/from pydantic models
     """
@@ -18,18 +19,16 @@ class AiopgRepository(AsyncBaseRepo[GenericIdModel], ABC):
     def __init__(
         self, connection_or_context_var: Union[SAConnection, ContextVar[SAConnection]]
     ) -> None:
-        self.connection_or_context_var = connection_or_context_var
+        connection = (
+            connection_or_context_var
+            if isinstance(connection_or_context_var, SAConnection)
+            else connection_or_context_var.get()
+        )
+        super().__init__(AiopgQueryExecutor(connection))
 
     @property
     def _connection(self) -> SAConnection:
-        if isinstance(self.connection_or_context_var, SAConnection):
-            return self.connection_or_context_var
-        else:
-            return self.connection_or_context_var.get()
-
-    @property
-    def query_executor(self) -> AsyncQueryExecutor:
-        return AiopgQueryExecutor(self._connection)
+        return cast(AiopgQueryExecutor, self.query_executor)._connection
 
 
 class AiopgQueryExecutor(AsyncQueryExecutor):
