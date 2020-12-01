@@ -5,6 +5,7 @@ from repka.repositories.base import GenericIdModel, AsyncBaseRepo, AsyncQueryExe
 
 class Repository(AsyncBaseRepo[GenericIdModel], ABC):
     """A repository which allows to set a query executor in the initializer"""
+
     def __init__(self, query_executor: AsyncQueryExecutor):
         self._query_executor = query_executor
 
